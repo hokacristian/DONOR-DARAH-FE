@@ -6,9 +6,10 @@ import { apiService } from "@/lib/api"
 
 interface ProtectedRouteProps {
   children: React.ReactNode
+  requiredRole?: "admin" | "petugas"
 }
 
-export default function ProtectedRoute({ children }: ProtectedRouteProps) {
+export default function ProtectedRoute({ children, requiredRole = "admin" }: ProtectedRouteProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
@@ -18,28 +19,30 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
       const token = apiService.getStoredToken()
       const user = apiService.getStoredUser()
 
+      const loginPath = requiredRole === "admin" ? "/admin/login" : "/petugas/login"
+
       if (!token || !user) {
-        router.push("/admin/login")
+        router.push(loginPath)
         return
       }
 
       try {
         const response = await apiService.getCurrentUser()
-        if (response.success && response.data.role === 'admin') {
+        if (response.success && response.data.role === requiredRole) {
           setIsAuthenticated(true)
         } else {
-          router.push("/admin/login")
+          router.push(loginPath)
         }
       } catch (error) {
         console.error("Auth check failed:", error)
-        router.push("/admin/login")
+        router.push(loginPath)
       } finally {
         setIsLoading(false)
       }
     }
 
     checkAuth()
-  }, [router])
+  }, [router, requiredRole])
 
   if (isLoading) {
     return (

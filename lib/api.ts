@@ -173,6 +173,37 @@ class ApiService {
     }
     return null
   }
+
+  // Petugas endpoints
+  async getPetugasAssignedEvents() {
+    return this.fetchWithAuth(`${API_BASE_URL}/petugas/my-events`)
+  }
+
+  async getPetugasEventById(eventId: string) {
+    return this.fetchWithAuth(`${API_BASE_URL}/petugas/events/${eventId}`)
+  }
+
+  async registerDonorWithExamination(eventId: string, donorData: any) {
+    return this.fetchWithAuth(`${API_BASE_URL}/petugas/events/${eventId}/donors`, {
+      method: 'POST',
+      body: JSON.stringify(donorData),
+    })
+  }
+
+  async getEventDonors(eventId: string) {
+    return this.fetchWithAuth(`${API_BASE_URL}/petugas/events/${eventId}/donors`)
+  }
+
+  async getDonorById(eventId: string, donorId: string) {
+    return this.fetchWithAuth(`${API_BASE_URL}/petugas/events/${eventId}/donors/${donorId}`)
+  }
+
+  async updateDonorWithExamination(eventId: string, donorId: string, donorData: any) {
+    return this.fetchWithAuth(`${API_BASE_URL}/petugas/events/${eventId}/donors/${donorId}`, {
+      method: 'PUT',
+      body: JSON.stringify(donorData),
+    })
+  }
 }
 
 export const apiService = new ApiService()
