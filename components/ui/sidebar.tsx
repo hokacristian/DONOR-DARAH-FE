@@ -624,15 +624,16 @@ const SidebarMenuBadge = React.forwardRef<
 SidebarMenuBadge.displayName = "SidebarMenuBadge"
 
 const SidebarMenuSkeleton = React.forwardRef<
-  React.ElementRef<typeof Skeleton>,
-  React.ComponentProps<typeof Skeleton>
+  HTMLDivElement,
+  React.ComponentProps<"div">
 >(({ className, ...props }, ref) => (
-  <Skeleton
+  <div
     ref={ref}
     data-sidebar="menu-skeleton"
     className={cn("rounded-md", className)}
-    {...props}
-  />
+  >
+    <Skeleton {...props} />
+  </div>
 ))
 SidebarMenuSkeleton.displayName = "SidebarMenuSkeleton"
 

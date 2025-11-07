@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Calendar, MapPin, Users, Clock, Plus, Pencil, Trash2, Eye } from "lucide-react"
 
-interface Event {
+interface EventItem {
   id: string
   name: string
   location: string
@@ -24,7 +24,7 @@ interface Event {
 }
 
 export default function EventsPage() {
-  const [events, setEvents] = useState<Event[]>([])
+  const [events, setEvents] = useState<EventItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
 
@@ -33,7 +33,7 @@ export default function EventsPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
+  const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
   // Form states
@@ -101,12 +101,12 @@ export default function EventsPage() {
     setIsCreateModalOpen(true)
   }
 
-  const handleViewEvent = (event: Event) => {
+  const handleViewEvent = (event: EventItem) => {
     setSelectedEvent(event)
     setIsViewModalOpen(true)
   }
 
-  const handleEditEvent = (event: Event) => {
+  const handleEditEvent = (event: EventItem) => {
     setSelectedEvent(event)
     setFormData({
       name: event.name,
@@ -119,7 +119,7 @@ export default function EventsPage() {
     setIsEditModalOpen(true)
   }
 
-  const handleDeleteEvent = (event: Event) => {
+  const handleDeleteEvent = (event: EventItem) => {
     setSelectedEvent(event)
     setIsDeleteModalOpen(true)
   }

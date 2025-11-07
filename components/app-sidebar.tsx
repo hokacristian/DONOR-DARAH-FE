@@ -31,11 +31,6 @@ const items = [
     icon: Calendar,
   },
   {
-    title: "Users",
-    url: "/admin/users",
-    icon: Users,
-  },
-  {
     title: "Petugas Management",
     url: "/admin/petugas",
     icon: Users,

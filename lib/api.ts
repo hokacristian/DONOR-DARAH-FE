@@ -19,6 +19,33 @@ interface ApiResponse<T> {
   message?: string
 }
 
+interface DashboardStats {
+  totalEvents: number
+  activeEvents: number
+  totalPetugas: number
+  totalDonors: number
+  totalExaminations: number
+  eligibleDonors: number
+  notEligibleDonors: number
+}
+
+interface RecentEvent {
+  id: string
+  name: string
+  location: string
+  startDate: string
+  endDate: string
+  status: string
+  _count: {
+    donors: number
+  }
+}
+
+interface DashboardStatistics {
+  statistics: DashboardStats
+  recentEvents: RecentEvent[]
+}
+
 class ApiService {
   private getAuthHeader() {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
@@ -29,13 +56,16 @@ class ApiService {
     url: string,
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
+    const authHeader = this.getAuthHeader()
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...(authHeader as Record<string, string>),
+      ...(options.headers as Record<string, string> || {}),
+    }
+    
     const response = await fetch(url, {
       ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...this.getAuthHeader(),
-        ...options.headers,
-      },
+      headers,
     })
 
     if (!response.ok) {
@@ -63,15 +93,15 @@ class ApiService {
   }
 
   async getCurrentUser() {
-    return this.fetchWithAuth(`${API_BASE_URL}/auth/me`)
+    return this.fetchWithAuth<any>(`${API_BASE_URL}/auth/me`)
   }
 
   async getDashboardStatistics() {
-    return this.fetchWithAuth(`${API_BASE_URL}/admin/dashboard/statistics`)
+    return this.fetchWithAuth<DashboardStatistics>(`${API_BASE_URL}/admin/dashboard/statistics`)
   }
 
   async getAllEvents() {
-    return this.fetchWithAuth(`${API_BASE_URL}/admin/events`)
+    return this.fetchWithAuth<any[]>(`${API_BASE_URL}/admin/events`)
   }
 
   async getEventById(eventId: string) {
@@ -99,11 +129,11 @@ class ApiService {
   }
 
   async getAllUsers() {
-    return this.fetchWithAuth(`${API_BASE_URL}/admin/users`)
+    return this.fetchWithAuth<any[]>(`${API_BASE_URL}/admin/users`)
   }
 
   async getAllPetugas() {
-    return this.fetchWithAuth(`${API_BASE_URL}/admin/petugas`)
+    return this.fetchWithAuth<any[]>(`${API_BASE_URL}/admin/petugas`)
   }
 
   async getPetugasById(petugasId: string) {
@@ -135,7 +165,7 @@ class ApiService {
   }
 
   async getSettings() {
-    return this.fetchWithAuth(`${API_BASE_URL}/admin/settings`)
+    return this.fetchWithAuth<any[]>(`${API_BASE_URL}/admin/settings`)
   }
 
   async updateThresholdSetting(value: string) {
@@ -176,11 +206,11 @@ class ApiService {
 
   // Petugas endpoints
   async getPetugasAssignedEvents() {
-    return this.fetchWithAuth(`${API_BASE_URL}/petugas/my-events`)
+    return this.fetchWithAuth<any[]>(`${API_BASE_URL}/petugas/events/assigned`)
   }
 
   async getPetugasEventById(eventId: string) {
-    return this.fetchWithAuth(`${API_BASE_URL}/petugas/events/${eventId}`)
+    return this.fetchWithAuth<any>(`${API_BASE_URL}/petugas/events/${eventId}`)
   }
 
   async registerDonorWithExamination(eventId: string, donorData: any) {
