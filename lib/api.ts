@@ -206,7 +206,7 @@ class ApiService {
 
   // Petugas endpoints
   async getPetugasAssignedEvents() {
-    return this.fetchWithAuth<any[]>(`${API_BASE_URL}/petugas/events/assigned`)
+    return this.fetchWithAuth<any[]>(`${API_BASE_URL}/petugas/my-events`)
   }
 
   async getPetugasEventById(eventId: string) {
