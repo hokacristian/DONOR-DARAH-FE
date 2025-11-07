@@ -21,8 +21,8 @@ export default function AdminLayout({
     <ProtectedRoute>
       <SidebarProvider>
         <AppSidebar />
-        <main className="flex-1">
-          <div className="p-4">
+        <main className="flex-1 bg-gray-50">
+          <div className="p-4 bg-white border-b">
             <SidebarTrigger />
           </div>
           {children}

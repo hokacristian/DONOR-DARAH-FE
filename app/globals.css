@@ -50,7 +50,8 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
+/* Dark mode disabled - force light mode */
+/* @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
@@ -67,8 +68,7 @@
     --border: #374151;
     --input: #374151;
     --ring: #dc2626;
-    
-    /* Dark sidebar colors */
+
     --sidebar: #111827;
     --sidebar-foreground: #d1d5db;
     --sidebar-primary: #dc2626;
@@ -78,7 +78,7 @@
     --sidebar-border: #374151;
     --sidebar-ring: #dc2626;
   }
-}
+} */
 
 body {
   background: var(--background);
