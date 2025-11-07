@@ -102,6 +102,10 @@ class ApiService {
     return this.fetchWithAuth(`${API_BASE_URL}/admin/users`)
   }
 
+  async getAllPetugas() {
+    return this.fetchWithAuth(`${API_BASE_URL}/admin/petugas`)
+  }
+
   async getEventReport(eventId: string) {
     return this.fetchWithAuth(`${API_BASE_URL}/admin/reports/${eventId}`)
   }

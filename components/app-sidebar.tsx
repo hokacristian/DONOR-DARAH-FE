@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { Calendar, Home, Users, Settings, FileText, Shield, LogOut } from "lucide-react"
+import { Calendar, FileText, Home, LogOut, Settings, Shield, Users } from "lucide-react"
 import { apiService } from "@/lib/api"
 
 import {
@@ -32,6 +32,11 @@ const items = [
   {
     title: "Users",
     url: "/admin/users",
+    icon: Users,
+  },
+  {
+    title: "Petugas Management",
+    url: "/admin/petugas",
     icon: Users,
   },
   {
