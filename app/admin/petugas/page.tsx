@@ -4,7 +4,10 @@ import { useState, useEffect } from "react"
 import { apiService } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { User, Mail, Shield, UserPlus } from "lucide-react"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { User, Mail, Shield, UserPlus, Pencil, Trash2 } from "lucide-react"
 
 interface PetugasData {
   id: string
@@ -21,6 +24,20 @@ export default function PetugasPage() {
   const [petugas, setPetugas] = useState<PetugasData[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+
+  // Modal states
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [selectedPetugas, setSelectedPetugas] = useState<PetugasData | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+
+  // Form states
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    fullName: "",
+  })
 
   useEffect(() => {
     fetchPetugas()
@@ -48,6 +65,99 @@ export default function PetugasPage() {
       month: 'long',
       year: 'numeric'
     })
+  }
+
+  const handleAddPetugas = () => {
+    setFormData({ email: "", password: "", fullName: "" })
+    setIsAddModalOpen(true)
+  }
+
+  const handleEditPetugas = (user: PetugasData) => {
+    setSelectedPetugas(user)
+    setFormData({ email: user.email, password: "", fullName: user.fullName })
+    setIsEditModalOpen(true)
+  }
+
+  const handleDeletePetugas = (user: PetugasData) => {
+    setSelectedPetugas(user)
+    setIsDeleteModalOpen(true)
+  }
+
+  const handleSubmitAdd = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!formData.email || !formData.password || !formData.fullName) {
+      setError("All fields are required")
+      return
+    }
+
+    try {
+      setSubmitting(true)
+      const response = await apiService.createPetugas(formData)
+      if (response.success) {
+        setIsAddModalOpen(false)
+        fetchPetugas()
+        setFormData({ email: "", password: "", fullName: "" })
+      } else {
+        setError("Failed to create petugas")
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to create petugas")
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleSubmitEdit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedPetugas || !formData.email || !formData.fullName) {
+      setError("Email and Full Name are required")
+      return
+    }
+
+    try {
+      setSubmitting(true)
+      const updateData: any = {
+        email: formData.email,
+        fullName: formData.fullName,
+      }
+      if (formData.password) {
+        updateData.password = formData.password
+      }
+
+      const response = await apiService.updatePetugas(selectedPetugas.id, updateData)
+      if (response.success) {
+        setIsEditModalOpen(false)
+        fetchPetugas()
+        setFormData({ email: "", password: "", fullName: "" })
+        setSelectedPetugas(null)
+      } else {
+        setError("Failed to update petugas")
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to update petugas")
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!selectedPetugas) return
+
+    try {
+      setSubmitting(true)
+      const response = await apiService.deletePetugas(selectedPetugas.id)
+      if (response.success) {
+        setIsDeleteModalOpen(false)
+        fetchPetugas()
+        setSelectedPetugas(null)
+      } else {
+        setError("Failed to delete petugas")
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to delete petugas")
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   if (loading) {
@@ -85,7 +195,7 @@ export default function PetugasPage() {
     <div className="p-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Petugas Management</h1>
-        <Button className="bg-red-600 hover:bg-red-700">
+        <Button onClick={handleAddPetugas} className="bg-red-600 hover:bg-red-700">
           <UserPlus className="h-4 w-4 mr-2" />
           Add New Petugas
         </Button>
@@ -138,10 +248,22 @@ export default function PetugasPage() {
                 </div>
 
                 <div className="flex space-x-2 pt-2">
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => handleEditPetugas(user)}
+                  >
+                    <Pencil className="h-3 w-3 mr-1" />
                     Edit
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 text-red-600 hover:text-red-700"
+                    onClick={() => handleDeletePetugas(user)}
+                  >
+                    <Trash2 className="h-3 w-3 mr-1" />
                     Delete
                   </Button>
                 </div>
@@ -150,6 +272,157 @@ export default function PetugasPage() {
           ))}
         </div>
       )}
+
+      {/* Add Petugas Modal */}
+      <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New Petugas</DialogTitle>
+            <DialogDescription>
+              Create a new petugas account. All fields are required.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmitAdd}>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Full Name</Label>
+                <Input
+                  id="fullName"
+                  placeholder="Enter full name"
+                  value={formData.fullName}
+                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Enter email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Enter password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  required
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsAddModalOpen(false)}
+                disabled={submitting}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={submitting} className="bg-red-600 hover:bg-red-700">
+                {submitting ? "Creating..." : "Create Petugas"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Petugas Modal */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Petugas</DialogTitle>
+            <DialogDescription>
+              Update petugas information. Leave password blank to keep it unchanged.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmitEdit}>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-fullName">Full Name</Label>
+                <Input
+                  id="edit-fullName"
+                  placeholder="Enter full name"
+                  value={formData.fullName}
+                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-email">Email</Label>
+                <Input
+                  id="edit-email"
+                  type="email"
+                  placeholder="Enter email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-password">New Password (Optional)</Label>
+                <Input
+                  id="edit-password"
+                  type="password"
+                  placeholder="Leave blank to keep current password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsEditModalOpen(false)}
+                disabled={submitting}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={submitting} className="bg-red-600 hover:bg-red-700">
+                {submitting ? "Updating..." : "Update Petugas"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Modal */}
+      <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Petugas</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete {selectedPetugas?.fullName}? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsDeleteModalOpen(false)}
+              disabled={submitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleConfirmDelete}
+              disabled={submitting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {submitting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

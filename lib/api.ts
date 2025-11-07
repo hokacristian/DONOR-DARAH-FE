@@ -106,6 +106,30 @@ class ApiService {
     return this.fetchWithAuth(`${API_BASE_URL}/admin/petugas`)
   }
 
+  async getPetugasById(petugasId: string) {
+    return this.fetchWithAuth(`${API_BASE_URL}/admin/petugas/${petugasId}`)
+  }
+
+  async createPetugas(petugasData: { email: string; password: string; fullName: string }) {
+    return this.fetchWithAuth(`${API_BASE_URL}/admin/users`, {
+      method: 'POST',
+      body: JSON.stringify({ ...petugasData, role: 'petugas' }),
+    })
+  }
+
+  async updatePetugas(petugasId: string, petugasData: { email?: string; fullName?: string; password?: string }) {
+    return this.fetchWithAuth(`${API_BASE_URL}/admin/petugas/${petugasId}`, {
+      method: 'PUT',
+      body: JSON.stringify(petugasData),
+    })
+  }
+
+  async deletePetugas(petugasId: string) {
+    return this.fetchWithAuth(`${API_BASE_URL}/admin/petugas/${petugasId}`, {
+      method: 'DELETE',
+    })
+  }
+
   async getEventReport(eventId: string) {
     return this.fetchWithAuth(`${API_BASE_URL}/admin/reports/${eventId}`)
   }
