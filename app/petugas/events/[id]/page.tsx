@@ -61,6 +61,8 @@ export default function EventDetailPage() {
   const [error, setError] = useState("")
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [isResultModalOpen, setIsResultModalOpen] = useState(false)
+  const [evaluationResult, setEvaluationResult] = useState<any>(null)
 
   // Form data
   const [formData, setFormData] = useState({
@@ -155,9 +157,9 @@ export default function EventDetailPage() {
       const response = await apiService.registerDonorWithExamination(eventId, donorData)
       if (response.success) {
         setIsModalOpen(false)
+        setEvaluationResult(response.data)
+        setIsResultModalOpen(true)
         fetchDonors()
-        // Show success message with evaluation result
-        alert(`Donor registered successfully!\nStatus: ${response.data.evaluation.status}\nEligibility: ${response.data.evaluation.isEligible ? 'LAYAK' : 'TIDAK LAYAK'}`)
       } else {
         setError("Failed to register donor")
       }
@@ -498,6 +500,231 @@ export default function EventDetailPage() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Evaluation Result Modal */}
+      <Dialog open={isResultModalOpen} onOpenChange={setIsResultModalOpen}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">SAW Evaluation Result</DialogTitle>
+            <DialogDescription>
+              Blood donor eligibility evaluation using Simple Additive Weighting (SAW) algorithm
+            </DialogDescription>
+          </DialogHeader>
+
+          {evaluationResult && (
+            <div className="space-y-6 py-4">
+              {/* Status Banner */}
+              <div className={`p-6 rounded-lg text-center ${
+                evaluationResult.evaluation.isEligible
+                  ? 'bg-green-100 border-2 border-green-500'
+                  : 'bg-red-100 border-2 border-red-500'
+              }`}>
+                <div className="flex items-center justify-center space-x-3 mb-2">
+                  {evaluationResult.evaluation.isEligible ? (
+                    <CheckCircle className="h-12 w-12 text-green-600" />
+                  ) : (
+                    <XCircle className="h-12 w-12 text-red-600" />
+                  )}
+                  <h2 className={`text-4xl font-bold ${
+                    evaluationResult.evaluation.isEligible ? 'text-green-800' : 'text-red-800'
+                  }`}>
+                    {evaluationResult.evaluation.status}
+                  </h2>
+                </div>
+                <p className={`text-lg ${
+                  evaluationResult.evaluation.isEligible ? 'text-green-700' : 'text-red-700'
+                }`}>
+                  Donor is {evaluationResult.evaluation.isEligible ? 'eligible' : 'not eligible'} for blood donation
+                </p>
+              </div>
+
+              {/* Donor Information */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-semibold text-gray-900 mb-3">Donor Information</h3>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-600">Name:</span>
+                    <span className="ml-2 font-medium">{evaluationResult.donor.fullName}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Blood Type:</span>
+                    <span className="ml-2 font-medium">{evaluationResult.donor.bloodType}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Gender:</span>
+                    <span className="ml-2 font-medium">{evaluationResult.donor.gender}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Phone:</span>
+                    <span className="ml-2 font-medium">{evaluationResult.donor.phone}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* SAW Results */}
+              <div className="grid grid-cols-3 gap-4">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm text-gray-600">Preference Value (Yi)</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-2xl font-bold text-blue-600">
+                      {evaluationResult.evaluation.preferenceValue.toFixed(4)}
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm text-gray-600">Threshold</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-2xl font-bold text-gray-700">
+                      {evaluationResult.evaluation.threshold.toFixed(4)}
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm text-gray-600">Result</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className={`text-lg font-bold ${
+                      evaluationResult.evaluation.isEligible ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {evaluationResult.evaluation.preferenceValue >= evaluationResult.evaluation.threshold
+                        ? `Yi ≥ Threshold`
+                        : `Yi < Threshold`}
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Examination Data */}
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-3">Health Examination Data</h3>
+                <div className="grid grid-cols-4 gap-3 text-sm">
+                  <div className="bg-gray-50 p-3 rounded">
+                    <div className="text-gray-600 text-xs">Blood Pressure</div>
+                    <div className="font-semibold">{evaluationResult.examination.bloodPressureSystolic}/{evaluationResult.examination.bloodPressureDiastolic}</div>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded">
+                    <div className="text-gray-600 text-xs">Weight</div>
+                    <div className="font-semibold">{evaluationResult.examination.weight} kg</div>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded">
+                    <div className="text-gray-600 text-xs">Hemoglobin</div>
+                    <div className="font-semibold">{evaluationResult.examination.hemoglobin} g/dL</div>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded">
+                    <div className="text-gray-600 text-xs">Age</div>
+                    <div className="font-semibold">{evaluationResult.examination.age} years</div>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded">
+                    <div className="text-gray-600 text-xs">Medication Free</div>
+                    <div className="font-semibold">{evaluationResult.examination.medicationFreeDays} days</div>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded">
+                    <div className="text-gray-600 text-xs">Last Sleep</div>
+                    <div className="font-semibold">{evaluationResult.examination.lastSleepHours} hours</div>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded">
+                    <div className="text-gray-600 text-xs">Disease History</div>
+                    <div className="font-semibold">{evaluationResult.examination.hasDiseaseHistory ? 'Yes' : 'No'}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Criteria Evaluation Table */}
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-3">SAW Criteria Evaluation Details</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="px-4 py-2 text-left">Code</th>
+                        <th className="px-4 py-2 text-left">Criteria</th>
+                        <th className="px-4 py-2 text-right">Raw Value</th>
+                        <th className="px-4 py-2 text-right">Mapped Value</th>
+                        <th className="px-4 py-2 text-right">Normalized</th>
+                        <th className="px-4 py-2 text-right">Weighted</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {evaluationResult.evaluation.criteriaValues.map((criteria: any, index: number) => {
+                        const criteriaNames: { [key: string]: string } = {
+                          'C1': 'Blood Pressure',
+                          'C2': 'Weight',
+                          'C3': 'Hemoglobin',
+                          'C4': 'Medication Free Days',
+                          'C5': 'Age',
+                          'C6': 'Last Sleep Hours',
+                          'C7': 'Disease History'
+                        }
+
+                        return (
+                          <tr key={criteria.code} className="hover:bg-gray-50">
+                            <td className="px-4 py-2 font-medium">{criteria.code}</td>
+                            <td className="px-4 py-2">{criteriaNames[criteria.code]}</td>
+                            <td className="px-4 py-2 text-right">
+                              {typeof criteria.rawValue === 'boolean'
+                                ? (criteria.rawValue ? 'Yes' : 'No')
+                                : criteria.rawValue}
+                            </td>
+                            <td className="px-4 py-2 text-right font-medium">{criteria.mappedValue}</td>
+                            <td className="px-4 py-2 text-right text-blue-600">
+                              {evaluationResult.evaluation.normalizedValues[index]?.toFixed(4)}
+                            </td>
+                            <td className="px-4 py-2 text-right font-semibold text-green-600">
+                              {evaluationResult.evaluation.weightedValues[index]?.toFixed(4)}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                    <tfoot className="bg-gray-100 font-bold">
+                      <tr>
+                        <td colSpan={5} className="px-4 py-2 text-right">Total Preference Value (Yi):</td>
+                        <td className="px-4 py-2 text-right text-blue-600">
+                          {evaluationResult.evaluation.preferenceValue.toFixed(4)}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+
+              {/* Additional Info */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-start space-x-3">
+                  <div className="text-blue-600 mt-1">
+                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 text-sm text-blue-900">
+                    <p className="font-medium mb-1">SAW Algorithm Explanation:</p>
+                    <ul className="list-disc list-inside space-y-1 text-blue-800">
+                      <li>Each criterion is normalized and weighted according to its importance</li>
+                      <li>The weighted values are summed to get the Preference Value (Yi)</li>
+                      <li>If Yi ≥ Threshold ({evaluationResult.evaluation.threshold.toFixed(4)}), donor is LAYAK (eligible)</li>
+                      <li>If Yi &lt; Threshold, donor is TIDAK LAYAK (not eligible)</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              onClick={() => setIsResultModalOpen(false)}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Close
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
