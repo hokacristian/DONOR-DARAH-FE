@@ -32,7 +32,7 @@ interface Examination {
   age: number
   lastSleepHours: number
   hasDiseaseHistory: boolean
-  mooraEvaluations?: {
+  mooraCalculations?: {
     id: string
     preferenceValue: number
     isEligible: boolean
@@ -252,7 +252,7 @@ export default function EventDetailPage() {
               {donors.map((donor) => {
                 // Get latest examination and evaluation
                 const latestExam = donor.examinations?.[0]
-                const latestEval = latestExam?.mooraEvaluations?.[0]
+                const latestEval = latestExam?.mooraCalculations?.[0]
 
                 return (
                   <div
