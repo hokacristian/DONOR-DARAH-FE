@@ -36,7 +36,7 @@ export function PetugasSidebar() {
 
   const handleLogout = () => {
     apiService.logout()
-    router.push("/petugas/login")
+    router.push("/login")
   }
 
   return (

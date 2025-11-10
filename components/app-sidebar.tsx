@@ -52,7 +52,7 @@ export function AppSidebar() {
 
   const handleLogout = () => {
     apiService.logout()
-    router.push("/admin/login")
+    router.push("/login")
   }
 
   return (

@@ -5,10 +5,9 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Shield, LogIn } from "lucide-react"
 import { apiService } from "@/lib/api"
 
-export default function AdminLogin() {
+export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -19,18 +18,29 @@ export default function AdminLogin() {
     e.preventDefault()
     setIsLoading(true)
     setError("")
-    
+
     try {
       const response = await apiService.login(email, password)
-      
-      if (response.success && response.data.user.role === 'admin') {
-        apiService.saveAuthData(response.data.token, response.data.user)
-        router.push("/admin/dashboard")
+
+      if (response.success && response.data.user) {
+        const { token, user } = response.data
+
+        // Save auth data
+        apiService.saveAuthData(token, user)
+
+        // Redirect based on role
+        if (user.role === 'admin') {
+          router.push("/admin/dashboard")
+        } else if (user.role === 'petugas') {
+          router.push("/petugas/dashboard")
+        } else {
+          setError("Invalid user role. Please contact administrator.")
+        }
       } else {
-        setError("Access denied. Admin privileges required.")
+        setError("Login failed. Please check your credentials.")
       }
     } catch (err: any) {
-      setError(err.message || "Login failed. Please check your credentials.")
+      setError(err.message || "Login failed. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -57,7 +67,7 @@ export default function AdminLogin() {
             </svg>
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Admin Portal
+            Blood Donor System
           </h1>
           <p className="text-gray-600">
             Blood Donor Moora System
@@ -67,15 +77,10 @@ export default function AdminLogin() {
         {/* Login Card */}
         <Card className="border-0 shadow-2xl">
           <CardHeader className="space-y-1 bg-red-600 text-white rounded-t-lg">
-            <CardTitle className="text-2xl text-center">Admin Login</CardTitle>
+            <CardTitle className="text-2xl text-center">Sign In</CardTitle>
             <CardDescription className="text-red-100 text-center">
-              Enter your credentials to access the admin dashboard
+              Enter your credentials to access the system
             </CardDescription>
-            {error && (
-              <div className="mt-4 p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
-                {error}
-              </div>
-            )}
           </CardHeader>
           <CardContent className="p-6">
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -86,7 +91,7 @@ export default function AdminLogin() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="admin@pmi.com"
+                  placeholder="your.email@pmi.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -94,7 +99,7 @@ export default function AdminLogin() {
                   disabled={isLoading}
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <label htmlFor="password" className="text-sm font-medium text-gray-700">
                   Password
@@ -110,6 +115,12 @@ export default function AdminLogin() {
                   disabled={isLoading}
                 />
               </div>
+
+              {error && (
+                <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md border border-red-200">
+                  {error}
+                </div>
+              )}
 
               <Button
                 type="submit"
@@ -132,7 +143,13 @@ export default function AdminLogin() {
 
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
-                Demo credentials: admin@pmi.com / admin123
+                Demo credentials:
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                Admin: admin@pmi.com / admin123
+              </p>
+              <p className="text-xs text-gray-500">
+                Petugas: petugas1@pmi.com / petugas123
               </p>
             </div>
           </CardContent>

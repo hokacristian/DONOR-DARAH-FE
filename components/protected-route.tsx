@@ -19,10 +19,8 @@ export default function ProtectedRoute({ children, requiredRole = "admin" }: Pro
       const token = apiService.getStoredToken()
       const user = apiService.getStoredUser()
 
-      const loginPath = requiredRole === "admin" ? "/admin/login" : "/petugas/login"
-
       if (!token || !user) {
-        router.push(loginPath)
+        router.push("/login")
         return
       }
 
@@ -31,11 +29,11 @@ export default function ProtectedRoute({ children, requiredRole = "admin" }: Pro
         if (response.success && response.data.role === requiredRole) {
           setIsAuthenticated(true)
         } else {
-          router.push(loginPath)
+          router.push("/login")
         }
       } catch (error) {
         console.error("Auth check failed:", error)
-        router.push(loginPath)
+        router.push("/login")
       } finally {
         setIsLoading(false)
       }
