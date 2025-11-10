@@ -175,6 +175,24 @@ class ApiService {
     })
   }
 
+  // Event Officers Management
+  async getEventOfficers(eventId: string) {
+    return this.fetchWithAuth<any[]>(`${API_BASE_URL}/admin/events/${eventId}/officers`)
+  }
+
+  async assignOfficer(eventId: string, userId: string) {
+    return this.fetchWithAuth(`${API_BASE_URL}/admin/events/${eventId}/officers`, {
+      method: 'POST',
+      body: JSON.stringify({ userId }),
+    })
+  }
+
+  async removeOfficer(eventId: string, officerId: string) {
+    return this.fetchWithAuth(`${API_BASE_URL}/admin/events/${eventId}/officers/${officerId}`, {
+      method: 'DELETE',
+    })
+  }
+
   logout() {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('token')
