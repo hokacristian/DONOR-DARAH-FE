@@ -1,8 +1,8 @@
 {
 	"info": {
-		"_postman_id": "blood-donor-saw-api-2025",
-		"name": "Blood Donor SAW API",
-		"description": "API Collection for Blood Donor Eligibility System using SAW (Simple Additive Weighting) Algorithm",
+		"_postman_id": "blood-donor-moora-api-2025",
+		"name": "Blood Donor Moora API",
+		"description": "API Collection for Blood Donor Eligibility System using Moora (Multi-Objective Optimization on the basis of Ratio Analysis) Algorithm",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -276,7 +276,7 @@
 					"response": []
 				},
 				{
-					"name": "Get Event Report (SAW Evaluations)",
+					"name": "Get Event Report (Moora Evaluations)",
 					"request": {
 						"method": "GET",
 						"header": [
@@ -290,7 +290,7 @@
 							"host": ["{{base_url}}"],
 							"path": ["api", "admin", "reports", "{{event_id}}"]
 						},
-						"description": "Get comprehensive report for an event including:\n- Event details\n- Statistics (total donors, eligible count, threshold)\n- All evaluations with LAYAK/TIDAK LAYAK status\n- No ranking (SAW method)"
+						"description": "Get comprehensive report for an event including:\n- Event details\n- Statistics (total donors, eligible count, threshold)\n- All evaluations with LAYAK/TIDAK LAYAK status\n- No ranking (Moora method)"
 					},
 					"response": []
 				},
@@ -335,7 +335,7 @@
 							"host": ["{{base_url}}"],
 							"path": ["api", "admin", "settings", "eligibility_threshold"]
 						},
-						"description": "Update eligibility threshold (must be between 0 and 1)\nDefault SAW threshold: 0.0520"
+						"description": "Update eligibility threshold (must be between 0 and 1)\nDefault Moora threshold: 0.0520"
 					},
 					"response": []
 				}
@@ -383,7 +383,7 @@
 			]
 		},
 		{
-			"name": "Petugas - Donors (SAW Evaluation)",
+			"name": "Petugas - Donors (Moora Evaluation)",
 			"item": [
 				{
 					"name": "Register Donor + Examination (LAYAK)",
@@ -396,7 +396,7 @@
 									"    var jsonData = pm.response.json();",
 									"    pm.environment.set(\"donor_id\", jsonData.data.donor.id);",
 									"    pm.environment.set(\"examination_id\", jsonData.data.examination.id);",
-									"    console.log('SAW Evaluation:', jsonData.data.evaluation);",
+									"    console.log('Moora Evaluation:', jsonData.data.evaluation);",
 									"}"
 								],
 								"type": "text/javascript"
@@ -429,7 +429,7 @@
 							"host": ["{{base_url}}"],
 							"path": ["api", "petugas", "events", "{{event_id}}", "donors"]
 						},
-						"description": "Register donor with examination data.\nThis will trigger SAW evaluation and return:\n- preferenceValue (Yi)\n- isEligible (true/false)\n- status (LAYAK/TIDAK LAYAK)\n\nExample data results in LAYAK status (Yi >= 0.0520)"
+						"description": "Register donor with examination data.\nThis will trigger Moora evaluation and return:\n- preferenceValue (Yi)\n- isEligible (true/false)\n- status (LAYAK/TIDAK LAYAK)\n\nExample data results in LAYAK status (Yi >= 0.0520)"
 					},
 					"response": []
 				},

@@ -32,7 +32,7 @@ interface Examination {
   age: number
   lastSleepHours: number
   hasDiseaseHistory: boolean
-  sawEvaluations?: {
+  mooraEvaluations?: {
     id: string
     preferenceValue: number
     isEligible: boolean
@@ -252,7 +252,7 @@ export default function EventDetailPage() {
               {donors.map((donor) => {
                 // Get latest examination and evaluation
                 const latestExam = donor.examinations?.[0]
-                const latestEval = latestExam?.sawEvaluations?.[0]
+                const latestEval = latestExam?.mooraEvaluations?.[0]
 
                 return (
                   <div
@@ -312,7 +312,7 @@ export default function EventDetailPage() {
           <DialogHeader>
             <DialogTitle>Register New Donor</DialogTitle>
             <DialogDescription>
-              Fill in donor information and health examination data. The system will automatically evaluate eligibility using SAW algorithm.
+              Fill in donor information and health examination data. The system will automatically evaluate eligibility using Moora algorithm.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
@@ -507,9 +507,9 @@ export default function EventDetailPage() {
       <Dialog open={isResultModalOpen} onOpenChange={setIsResultModalOpen}>
         <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl">SAW Evaluation Result</DialogTitle>
+            <DialogTitle className="text-2xl">Moora Evaluation Result</DialogTitle>
             <DialogDescription>
-              Blood donor eligibility evaluation using Simple Additive Weighting (SAW) algorithm
+              Blood donor eligibility evaluation using Multi-Objective Optimization on the basis of Ratio Analysis (Moora) algorithm
             </DialogDescription>
           </DialogHeader>
 
@@ -563,7 +563,7 @@ export default function EventDetailPage() {
                 </div>
               </div>
 
-              {/* SAW Results */}
+              {/* Moora Results */}
               <div className="grid grid-cols-3 gap-4">
                 <Card>
                   <CardHeader className="pb-3">
@@ -638,7 +638,7 @@ export default function EventDetailPage() {
 
               {/* Criteria Evaluation Table */}
               <div>
-                <h3 className="font-semibold text-gray-900 mb-3">SAW Criteria Evaluation Details</h3>
+                <h3 className="font-semibold text-gray-900 mb-3">Moora Criteria Evaluation Details</h3>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="bg-gray-100">
@@ -704,7 +704,7 @@ export default function EventDetailPage() {
                     </svg>
                   </div>
                   <div className="flex-1 text-sm text-blue-900">
-                    <p className="font-medium mb-1">SAW Algorithm Explanation:</p>
+                    <p className="font-medium mb-1">Moora Algorithm Explanation:</p>
                     <ul className="list-disc list-inside space-y-1 text-blue-800">
                       <li>Each criterion is normalized and weighted according to its importance</li>
                       <li>The weighted values are summed to get the Preference Value (Yi)</li>

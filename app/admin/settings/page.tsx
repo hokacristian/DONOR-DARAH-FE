@@ -83,7 +83,7 @@ export default function SettingsPage() {
         <CardContent>
           <div className="space-y-2">
             <label htmlFor="threshold" className="text-sm font-medium text-gray-700">
-              Minimum SAW Score for Eligibility
+              Minimum Moora Score for Eligibility
             </label>
             <Input
               id="threshold"
@@ -93,7 +93,7 @@ export default function SettingsPage() {
               className="max-w-xs"
             />
             <p className="text-sm text-gray-500">
-              Set the minimum Simple Additive Weighting (SAW) score for a donor to be considered eligible.
+              Set the minimum Multi-Objective Optimization on the basis of Ratio Analysis (Moora) score for a donor to be considered eligible.
             </p>
           </div>
           <div className="mt-6">

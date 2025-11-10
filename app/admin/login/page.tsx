@@ -60,7 +60,7 @@ export default function AdminLogin() {
             Admin Portal
           </h1>
           <p className="text-gray-600">
-            Blood Donor SAW System
+            Blood Donor Moora System
           </p>
         </div>
 
@@ -141,7 +141,7 @@ export default function AdminLogin() {
         {/* Footer */}
         <div className="text-center mt-6">
           <p className="text-sm text-gray-500">
-            © 2025 Blood Donor SAW System. All rights reserved.
+            © 2025 Blood Donor Moora System. All rights reserved.
           </p>
         </div>
       </div>
