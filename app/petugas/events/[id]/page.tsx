@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { Calendar, MapPin, Plus, UserPlus, CheckCircle, XCircle, ChevronLeft, Filter, X } from "lucide-react"
+import { Calendar, MapPin, Plus, UserPlus, CheckCircle, XCircle, ChevronLeft, Filter, X, FileText } from "lucide-react"
 
 interface Event {
   id: string
@@ -284,10 +284,20 @@ export default function EventDetailPage() {
               </div>
             </div>
           </div>
-          <Button onClick={handleOpenModal} className="bg-red-600 hover:bg-red-700">
-            <UserPlus className="h-4 w-4 mr-2" />
-            Register New Donor
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => router.push(`/petugas/reports/${eventId}`)}
+              variant="outline"
+              className="border-blue-600 text-blue-600 hover:bg-blue-50"
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              View Full Report
+            </Button>
+            <Button onClick={handleOpenModal} className="bg-red-600 hover:bg-red-700">
+              <UserPlus className="h-4 w-4 mr-2" />
+              Register New Donor
+            </Button>
+          </div>
         </div>
       </div>
 

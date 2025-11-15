@@ -165,7 +165,7 @@ class ApiService {
   }
 
   async getEventReport(eventId: string) {
-    return this.fetchWithAuth(`${API_BASE_URL}/admin/reports/${eventId}`)
+    return this.fetchWithAuth<any>(`${API_BASE_URL}/admin/reports/${eventId}`)
   }
 
   async getSettings() {
@@ -255,6 +255,10 @@ class ApiService {
       method: 'PUT',
       body: JSON.stringify(donorData),
     })
+  }
+
+  async getPetugasEventReport(eventId: string, page: number = 1, limit: number = 5) {
+    return this.fetchWithAuth<any>(`${API_BASE_URL}/petugas/reports/${eventId}?page=${page}&limit=${limit}`)
   }
 }
 
