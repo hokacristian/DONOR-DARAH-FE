@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { apiService } from "@/lib/api"
+import { generatePMIReport } from "@/lib/pdf-generator"
 import {
   ArrowLeft,
   Calendar,
@@ -17,7 +18,8 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  UserPlus
+  UserPlus,
+  Download
 } from "lucide-react"
 
 interface Event {
@@ -244,6 +246,23 @@ export default function PetugasReportDetailPage() {
     }
   }
 
+  const handleDownloadPDF = () => {
+    if (!reportData) return
+
+    // Prepare data for PDF
+    const evaluationsData = reportData.evaluations.map(evaluation => ({
+      fullName: evaluation.donor.fullName,
+      age: evaluation.examination.age,
+      gender: evaluation.donor.gender,
+      bloodType: evaluation.donor.bloodType,
+      preferenceValue: evaluation.evaluation.preferenceValue,
+      status: evaluation.evaluation.status,
+      isEligible: evaluation.evaluation.isEligible
+    }))
+
+    generatePMIReport(reportData.event, reportData.statistics, evaluationsData)
+  }
+
   if (loading) {
     return (
       <div className="p-4 md:p-6 lg:p-8">
@@ -289,13 +308,22 @@ export default function PetugasReportDetailPage() {
             <ArrowLeft className="h-4 w-4" />
             Back
           </button>
-          <button
-            onClick={() => router.push(`/petugas/events/${eventId}`)}
-            className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors"
-          >
-            <UserPlus className="h-4 w-4" />
-            Register New Donor
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={handleDownloadPDF}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors"
+            >
+              <Download className="h-4 w-4" />
+              Download PDF
+            </button>
+            <button
+              onClick={() => router.push(`/petugas/events/${eventId}`)}
+              className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors"
+            >
+              <UserPlus className="h-4 w-4" />
+              Register New Donor
+            </button>
+          </div>
         </div>
         <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-3">
           <div className="flex-1">

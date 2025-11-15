@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { apiService } from "@/lib/api"
+import { generatePMIReport } from "@/lib/pdf-generator"
 import {
   ArrowLeft,
   Calendar,
@@ -14,7 +15,8 @@ import {
   TrendingUp,
   Activity,
   Filter,
-  X
+  X,
+  Download
 } from "lucide-react"
 
 interface Event {
@@ -188,6 +190,23 @@ export default function ReportDetailPage() {
     return filtered
   }
 
+  const handleDownloadPDF = () => {
+    if (!reportData) return
+
+    // Prepare data for PDF
+    const evaluationsData = reportData.evaluations.map(evaluation => ({
+      fullName: evaluation.donor.fullName,
+      age: evaluation.examination.age,
+      gender: evaluation.donor.gender,
+      bloodType: evaluation.donor.bloodType,
+      preferenceValue: evaluation.evaluation.preferenceValue,
+      status: evaluation.evaluation.status,
+      isEligible: evaluation.evaluation.isEligible
+    }))
+
+    generatePMIReport(reportData.event, reportData.statistics, evaluationsData)
+  }
+
   const getStatusBadge = (status: string) => {
     const statusColors: Record<string, string> = {
       active: "bg-green-100 text-green-800 border-green-200",
@@ -254,13 +273,22 @@ export default function ReportDetailPage() {
     <div className="p-4 md:p-6 lg:p-8">
       {/* Header */}
       <div className="mb-6">
-        <button
-          onClick={() => router.push('/admin/reports')}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Reports
-        </button>
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={() => router.push('/admin/reports')}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Reports
+          </button>
+          <button
+            onClick={handleDownloadPDF}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors"
+          >
+            <Download className="h-4 w-4" />
+            Download PDF
+          </button>
+        </div>
         <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-3">
           <div className="flex-1">
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{reportData.event.name}</h1>
