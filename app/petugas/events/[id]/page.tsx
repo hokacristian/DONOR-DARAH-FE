@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { Calendar, MapPin, Plus, UserPlus, CheckCircle, XCircle, ChevronLeft } from "lucide-react"
+import { Calendar, MapPin, Plus, UserPlus, CheckCircle, XCircle, ChevronLeft, Filter, X } from "lucide-react"
 
 interface Event {
   id: string
@@ -64,6 +64,11 @@ export default function EventDetailPage() {
   const [isResultModalOpen, setIsResultModalOpen] = useState(false)
   const [evaluationResult, setEvaluationResult] = useState<any>(null)
 
+  // Filter states
+  const [statusFilter, setStatusFilter] = useState<'all' | 'eligible' | 'not_eligible'>('all')
+  const [sortByPreference, setSortByPreference] = useState<'none' | 'highest' | 'lowest'>('none')
+  const [sortByDate, setSortByDate] = useState<'none' | 'newest'>('none')
+
   // Form data
   const [formData, setFormData] = useState({
     fullName: "",
@@ -109,6 +114,62 @@ export default function EventDetailPage() {
     } catch (err: any) {
       console.error("Failed to load donors:", err)
     }
+  }
+
+  // Filter and sort donors
+  const getFilteredDonors = () => {
+    let filtered = [...donors]
+
+    // Apply status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(donor => {
+        const latestExam = donor.examinations?.[0]
+        const latestEval = latestExam?.mooraCalculations?.[0]
+
+        if (!latestEval) return false
+
+        if (statusFilter === 'eligible') {
+          return latestEval.isEligible
+        } else if (statusFilter === 'not_eligible') {
+          return !latestEval.isEligible
+        }
+        return true
+      })
+    }
+
+    // Apply preference value sort
+    if (sortByPreference !== 'none') {
+      filtered.sort((a, b) => {
+        const aLatestEval = a.examinations?.[0]?.mooraCalculations?.[0]
+        const bLatestEval = b.examinations?.[0]?.mooraCalculations?.[0]
+
+        if (!aLatestEval || !bLatestEval) return 0
+
+        if (sortByPreference === 'highest') {
+          return bLatestEval.preferenceValue - aLatestEval.preferenceValue
+        } else if (sortByPreference === 'lowest') {
+          return aLatestEval.preferenceValue - bLatestEval.preferenceValue
+        }
+        return 0
+      })
+    }
+
+    // Apply date sort (if you have calculatedAt field in mooraCalculations)
+    // Note: You might need to add this field to the interface if it's not there
+    if (sortByDate === 'newest') {
+      filtered.sort((a, b) => {
+        const aExam = a.examinations?.[0]
+        const bExam = b.examinations?.[0]
+
+        if (!aExam || !bExam) return 0
+
+        // Assuming examinations are already sorted by date, newest first
+        // If there's a createdAt field, use that instead
+        return 0 // Placeholder - modify based on your data structure
+      })
+    }
+
+    return filtered
   }
 
   const handleOpenModal = () => {
@@ -237,6 +298,139 @@ export default function EventDetailPage() {
         </div>
       )}
 
+      {/* Filter Section */}
+      {donors.length > 0 && (
+        <Card className="mb-6">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Filter className="h-5 w-5 text-gray-600" />
+              <CardTitle>Filter & Sort</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Status Filter */}
+              <div>
+                <Label className="mb-2 block">Filter by Status</Label>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant={statusFilter === 'all' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setStatusFilter('all')}
+                    className={statusFilter === 'all' ? 'bg-blue-600 hover:bg-blue-700' : ''}
+                  >
+                    All
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={statusFilter === 'eligible' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setStatusFilter('eligible')}
+                    className={statusFilter === 'eligible' ? 'bg-green-600 hover:bg-green-700' : ''}
+                  >
+                    Eligible
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={statusFilter === 'not_eligible' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setStatusFilter('not_eligible')}
+                    className={statusFilter === 'not_eligible' ? 'bg-red-600 hover:bg-red-700' : ''}
+                  >
+                    Not Eligible
+                  </Button>
+                </div>
+              </div>
+
+              {/* Sort by Preference Value */}
+              <div>
+                <Label htmlFor="sortPreference" className="mb-2 block">Sort by Preference Value</Label>
+                <Select value={sortByPreference} onValueChange={(value) => setSortByPreference(value as 'none' | 'highest' | 'lowest')}>
+                  <SelectTrigger id="sortPreference">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Default</SelectItem>
+                    <SelectItem value="highest">Highest First</SelectItem>
+                    <SelectItem value="lowest">Lowest First</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Sort by Date */}
+              <div>
+                <Label htmlFor="sortDate" className="mb-2 block">Sort by Calculated Date</Label>
+                <Select value={sortByDate} onValueChange={(value) => setSortByDate(value as 'none' | 'newest')}>
+                  <SelectTrigger id="sortDate">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Default</SelectItem>
+                    <SelectItem value="newest">Newest First</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Active Filters Display */}
+            {(statusFilter !== 'all' || sortByPreference !== 'none' || sortByDate !== 'none') && (
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <span className="text-sm text-gray-600">Active filters:</span>
+                {statusFilter !== 'all' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                    Status: {statusFilter === 'eligible' ? 'Eligible' : 'Not Eligible'}
+                    <button
+                      onClick={() => setStatusFilter('all')}
+                      className="hover:bg-blue-200 rounded-full p-0.5"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                )}
+                {sortByPreference !== 'none' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                    Sort: {sortByPreference === 'highest' ? 'Highest Value' : 'Lowest Value'}
+                    <button
+                      onClick={() => setSortByPreference('none')}
+                      className="hover:bg-blue-200 rounded-full p-0.5"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                )}
+                {sortByDate !== 'none' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                    Sort: Newest First
+                    <button
+                      onClick={() => setSortByDate('none')}
+                      className="hover:bg-blue-200 rounded-full p-0.5"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                )}
+                <button
+                  onClick={() => {
+                    setStatusFilter('all')
+                    setSortByPreference('none')
+                    setSortByDate('none')
+                  }}
+                  className="text-xs text-blue-600 hover:text-blue-800 underline"
+                >
+                  Clear all
+                </button>
+              </div>
+            )}
+
+            {/* Results count */}
+            <div className="mt-4 text-sm text-gray-600">
+              Showing {getFilteredDonors().length} of {donors.length} donors
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Donors List */}
       <Card>
         <CardHeader>
@@ -247,9 +441,15 @@ export default function EventDetailPage() {
             <div className="text-center py-8 text-gray-500">
               No donors registered yet. Click "Register New Donor" to add the first donor.
             </div>
+          ) : getFilteredDonors().length === 0 ? (
+            <div className="text-center py-8">
+              <Filter className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No Results Found</h3>
+              <p className="text-gray-600">No donors match your current filters. Try adjusting your filter criteria.</p>
+            </div>
           ) : (
             <div className="space-y-4">
-              {donors.map((donor) => {
+              {getFilteredDonors().map((donor) => {
                 // Get latest examination and evaluation
                 const latestExam = donor.examinations?.[0]
                 const latestEval = latestExam?.mooraCalculations?.[0]

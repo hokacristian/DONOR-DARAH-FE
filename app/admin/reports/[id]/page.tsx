@@ -12,7 +12,9 @@ import {
   CheckCircle,
   XCircle,
   TrendingUp,
-  Activity
+  Activity,
+  Filter,
+  X
 } from "lucide-react"
 
 interface Event {
@@ -95,6 +97,11 @@ export default function ReportDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
 
+  // Filter states
+  const [statusFilter, setStatusFilter] = useState<'all' | 'eligible' | 'not_eligible'>('all')
+  const [sortByPreference, setSortByPreference] = useState<'none' | 'highest' | 'lowest'>('none')
+  const [sortByDate, setSortByDate] = useState<'none' | 'newest'>('none')
+
   // Criteria names mapping
   const criteriaNames: Record<string, string> = {
     'C1': 'Tekanan Darah',
@@ -151,6 +158,34 @@ export default function ReportDetailPage() {
   const getSuccessRate = () => {
     if (!reportData || reportData.statistics.totalExamined === 0) return 0
     return ((reportData.statistics.eligibleCount / reportData.statistics.totalExamined) * 100).toFixed(1)
+  }
+
+  // Filter and sort evaluations
+  const getFilteredEvaluations = () => {
+    if (!reportData) return []
+
+    let filtered = [...reportData.evaluations]
+
+    // Apply status filter
+    if (statusFilter === 'eligible') {
+      filtered = filtered.filter(e => e.evaluation.isEligible)
+    } else if (statusFilter === 'not_eligible') {
+      filtered = filtered.filter(e => !e.evaluation.isEligible)
+    }
+
+    // Apply preference value sort
+    if (sortByPreference === 'highest') {
+      filtered.sort((a, b) => b.evaluation.preferenceValue - a.evaluation.preferenceValue)
+    } else if (sortByPreference === 'lowest') {
+      filtered.sort((a, b) => a.evaluation.preferenceValue - b.evaluation.preferenceValue)
+    }
+
+    // Apply date sort
+    if (sortByDate === 'newest') {
+      filtered.sort((a, b) => new Date(b.evaluation.calculatedAt).getTime() - new Date(a.evaluation.calculatedAt).getTime())
+    }
+
+    return filtered
   }
 
   const getStatusBadge = (status: string) => {
@@ -299,6 +334,145 @@ export default function ReportDetailPage() {
         </p>
       </div>
 
+      {/* Filter Section */}
+      {reportData.evaluations.length > 0 && (
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 mb-6">
+          <div className="p-4 md:p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Filter className="h-5 w-5 text-gray-600" />
+              <h3 className="text-base md:text-lg font-semibold text-gray-900">Filter & Sort</h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Status Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Filter by Status
+                </label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setStatusFilter('all')}
+                    className={`flex-1 px-3 py-2 text-sm rounded-md border transition-colors ${
+                      statusFilter === 'all'
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    All
+                  </button>
+                  <button
+                    onClick={() => setStatusFilter('eligible')}
+                    className={`flex-1 px-3 py-2 text-sm rounded-md border transition-colors ${
+                      statusFilter === 'eligible'
+                        ? 'bg-green-600 text-white border-green-600'
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    Eligible
+                  </button>
+                  <button
+                    onClick={() => setStatusFilter('not_eligible')}
+                    className={`flex-1 px-3 py-2 text-sm rounded-md border transition-colors ${
+                      statusFilter === 'not_eligible'
+                        ? 'bg-red-600 text-white border-red-600'
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    Not Eligible
+                  </button>
+                </div>
+              </div>
+
+              {/* Sort by Preference Value */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Sort by Preference Value
+                </label>
+                <select
+                  value={sortByPreference}
+                  onChange={(e) => setSortByPreference(e.target.value as 'none' | 'highest' | 'lowest')}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="none">Default</option>
+                  <option value="highest">Highest First</option>
+                  <option value="lowest">Lowest First</option>
+                </select>
+              </div>
+
+              {/* Sort by Date */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Sort by Calculated Date
+                </label>
+                <select
+                  value={sortByDate}
+                  onChange={(e) => setSortByDate(e.target.value as 'none' | 'newest')}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="none">Default</option>
+                  <option value="newest">Newest First</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Active Filters Display */}
+            {(statusFilter !== 'all' || sortByPreference !== 'none' || sortByDate !== 'none') && (
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <span className="text-sm text-gray-600">Active filters:</span>
+                {statusFilter !== 'all' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                    Status: {statusFilter === 'eligible' ? 'Eligible' : 'Not Eligible'}
+                    <button
+                      onClick={() => setStatusFilter('all')}
+                      className="hover:bg-blue-200 rounded-full p-0.5"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                )}
+                {sortByPreference !== 'none' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                    Sort: {sortByPreference === 'highest' ? 'Highest Value' : 'Lowest Value'}
+                    <button
+                      onClick={() => setSortByPreference('none')}
+                      className="hover:bg-blue-200 rounded-full p-0.5"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                )}
+                {sortByDate !== 'none' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                    Sort: Newest First
+                    <button
+                      onClick={() => setSortByDate('none')}
+                      className="hover:bg-blue-200 rounded-full p-0.5"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                )}
+                <button
+                  onClick={() => {
+                    setStatusFilter('all')
+                    setSortByPreference('none')
+                    setSortByDate('none')
+                  }}
+                  className="text-xs text-blue-600 hover:text-blue-800 underline"
+                >
+                  Clear all
+                </button>
+              </div>
+            )}
+
+            {/* Results count */}
+            <div className="mt-4 text-sm text-gray-600">
+              Showing {getFilteredEvaluations().length} of {reportData.evaluations.length} evaluations
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Evaluations Section */}
       <div className="bg-white rounded-lg shadow-md border border-gray-200">
         <div className="p-4 md:p-6 border-b border-gray-200">
@@ -312,11 +486,17 @@ export default function ReportDetailPage() {
             <h3 className="text-lg font-medium text-gray-900 mb-2">No Evaluations Yet</h3>
             <p className="text-gray-600">There are no donor evaluations for this event.</p>
           </div>
+        ) : getFilteredEvaluations().length === 0 ? (
+          <div className="p-12 text-center">
+            <Filter className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No Results Found</h3>
+            <p className="text-gray-600">No evaluations match your current filters. Try adjusting your filter criteria.</p>
+          </div>
         ) : (
           <>
             {/* Mobile/Tablet Card View */}
             <div className="lg:hidden divide-y divide-gray-200">
-              {reportData.evaluations.map((evaluation, index) => (
+              {getFilteredEvaluations().map((evaluation, index) => (
                 <div key={index} className="p-6 space-y-4">
                   {/* Donor Info */}
                   <div className="flex justify-between items-start">
@@ -415,7 +595,7 @@ export default function ReportDetailPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {reportData.evaluations.map((evaluation, index) => (
+                  {getFilteredEvaluations().map((evaluation, index) => (
                     <tr key={index} className="hover:bg-gray-50">
                       <td className="px-6 py-4">
                         <div>
@@ -471,14 +651,14 @@ export default function ReportDetailPage() {
       </div>
 
       {/* Criteria Breakdown */}
-      {reportData.evaluations.length > 0 && (
+      {getFilteredEvaluations().length > 0 && (
         <div className="mt-8 bg-white rounded-lg shadow-md border border-gray-200">
           <div className="p-4 md:p-6 border-b border-gray-200">
             <h2 className="text-lg md:text-xl font-bold text-gray-900">Criteria Breakdown</h2>
             <p className="text-sm md:text-base text-gray-600 mt-1">Detailed criteria values for each donor evaluation</p>
           </div>
           <div className="p-4 md:p-6 space-y-6">
-            {reportData.evaluations.map((evaluation, evalIndex) => (
+            {getFilteredEvaluations().map((evaluation, evalIndex) => (
               <div key={evalIndex} className="border-l-4 border-red-500 pl-3 md:pl-4">
                 <h3 className="font-semibold text-gray-900 mb-3 text-base md:text-lg">{evaluation.donor.fullName}</h3>
 
