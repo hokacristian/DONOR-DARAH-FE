@@ -141,7 +141,7 @@ class ApiService {
   }
 
   async createPetugas(petugasData: { email: string; password: string; fullName: string }) {
-    return this.fetchWithAuth(`${API_BASE_URL}/admin/users`, {
+    return this.fetchWithAuth(`${API_BASE_URL}/auth/register`, {
       method: 'POST',
       body: JSON.stringify({ ...petugasData, role: 'petugas' }),
     })
@@ -158,6 +158,10 @@ class ApiService {
     return this.fetchWithAuth(`${API_BASE_URL}/admin/petugas/${petugasId}`, {
       method: 'DELETE',
     })
+  }
+
+  async getAllReports() {
+    return this.fetchWithAuth<any[]>(`${API_BASE_URL}/admin/reports`)
   }
 
   async getEventReport(eventId: string) {
