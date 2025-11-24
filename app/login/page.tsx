@@ -140,18 +140,6 @@ export default function LoginPage() {
                 )}
               </Button>
             </form>
-
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
-                Demo credentials:
-              </p>
-              <p className="text-xs text-gray-500 mt-1">
-                Admin: admin@pmi.com / admin123
-              </p>
-              <p className="text-xs text-gray-500">
-                Petugas: petugas1@pmi.com / petugas123
-              </p>
-            </div>
           </CardContent>
         </Card>
 

@@ -92,6 +92,30 @@ export default function EventDetailPage() {
     fetchDonors()
   }, [eventId])
 
+  // Auto-calculate age from birth date
+  useEffect(() => {
+    if (formData.birthDate) {
+      const calculatedAge = calculateAge(formData.birthDate)
+      setFormData(prev => ({ ...prev, age: calculatedAge.toString() }))
+    }
+  }, [formData.birthDate])
+
+  // Helper function to calculate age from birth date
+  const calculateAge = (birthDate: string): number => {
+    if (!birthDate) return 0
+    const today = new Date()
+    const birth = new Date(birthDate)
+    let age = today.getFullYear() - birth.getFullYear()
+    const monthDiff = today.getMonth() - birth.getMonth()
+
+    // Adjust age if birthday hasn't occurred yet this year
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--
+    }
+
+    return age
+  }
+
   const fetchEventData = async () => {
     try {
       const response = await apiService.getPetugasEventById(eventId)
@@ -660,14 +684,16 @@ export default function EventDetailPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="age">Age *</Label>
+                    <Label htmlFor="age">Age (Auto-calculated) *</Label>
                     <Input
                       id="age"
                       type="number"
-                      placeholder="e.g. 25"
+                      placeholder="Will be calculated from birth date"
                       value={formData.age}
                       onChange={(e) => setFormData({ ...formData, age: e.target.value })}
                       required
+                      readOnly
+                      className="bg-gray-100 cursor-not-allowed"
                     />
                   </div>
                   <div className="space-y-2">
