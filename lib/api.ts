@@ -62,14 +62,24 @@ class ApiService {
       ...(authHeader as Record<string, string>),
       ...(options.headers as Record<string, string> || {}),
     }
-    
+
     const response = await fetch(url, {
       ...options,
       headers,
     })
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      let errorData
+      try {
+        errorData = await response.json()
+      } catch (parseError) {
+        // If JSON parsing fails, throw generic error
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      console.error('API Error Response:', errorData)
+      const errorMessage = errorData.message || errorData.error?.message || `HTTP error! status: ${response.status}`
+      throw new Error(errorMessage)
     }
 
     return response.json()

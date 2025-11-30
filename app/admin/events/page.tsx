@@ -42,6 +42,7 @@ export default function EventsPage() {
   const [availablePetugas, setAvailablePetugas] = useState<any[]>([])
   const [selectedPetugasId, setSelectedPetugasId] = useState("")
   const [selectedOfficerIds, setSelectedOfficerIds] = useState<string[]>([])
+  const [assignError, setAssignError] = useState("")
 
   // Form states
   const [formData, setFormData] = useState({
@@ -166,6 +167,8 @@ export default function EventsPage() {
 
   const handleOpenAssignModal = () => {
     setIsAssignModalOpen(true)
+    setAssignError("")
+    setSelectedPetugasId("")
     fetchAvailablePetugas()
   }
 
@@ -175,23 +178,25 @@ export default function EventsPage() {
 
   const handleAssignOfficer = async () => {
     if (!selectedEvent || !selectedPetugasId) {
-      setError("Please select a petugas")
+      setAssignError("Please select a petugas")
       return
     }
 
     try {
       setSubmitting(true)
+      setAssignError("")
       const response = await apiService.assignOfficer(selectedEvent.id, selectedPetugasId)
       if (response.success) {
         setIsAssignModalOpen(false)
         setSelectedPetugasId("")
+        setAssignError("")
         await fetchEventOfficers(selectedEvent.id)
         await fetchEvents() // Refresh event list to update officer count
       } else {
-        setError("Failed to assign officer")
+        setAssignError("Failed to assign officer")
       }
     } catch (err: any) {
-      setError(err.message || "Failed to assign officer")
+      setAssignError(err.message || "Failed to assign officer")
     } finally {
       setSubmitting(false)
     }
@@ -641,7 +646,13 @@ export default function EventsPage() {
       </Dialog>
 
       {/* Assign Officer Modal */}
-      <Dialog open={isAssignModalOpen} onOpenChange={setIsAssignModalOpen}>
+      <Dialog open={isAssignModalOpen} onOpenChange={(open) => {
+        setIsAssignModalOpen(open)
+        if (!open) {
+          setAssignError("")
+          setSelectedPetugasId("")
+        }
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Assign Petugas to Event</DialogTitle>
@@ -650,6 +661,11 @@ export default function EventsPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
+            {assignError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-sm text-red-600">{assignError}</p>
+              </div>
+            )}
             <Label htmlFor="petugas-select">Select Petugas</Label>
             <Select value={selectedPetugasId} onValueChange={setSelectedPetugasId}>
               <SelectTrigger className="mt-2">
@@ -670,6 +686,7 @@ export default function EventsPage() {
               onClick={() => {
                 setIsAssignModalOpen(false)
                 setSelectedPetugasId("")
+                setAssignError("")
               }}
               disabled={submitting}
             >
