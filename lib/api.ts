@@ -132,6 +132,13 @@ class ApiService {
     })
   }
 
+  async updateEventStatus(eventId: string, status: string) {
+    return this.fetchWithAuth(`${API_BASE_URL}/admin/events/${eventId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    })
+  }
+
   async deleteEvent(eventId: string) {
     return this.fetchWithAuth(`${API_BASE_URL}/admin/events/${eventId}`, {
       method: 'DELETE',

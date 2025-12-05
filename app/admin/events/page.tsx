@@ -278,22 +278,35 @@ export default function EventsPage() {
 
     try {
       setSubmitting(true)
+
+      // Update event details (without status)
+      const { status, ...eventDataWithoutStatus } = formData
       const eventData = {
-        ...formData,
+        ...eventDataWithoutStatus,
         startDate: new Date(formData.startDate).toISOString(),
         endDate: new Date(formData.endDate).toISOString(),
       }
       const response = await apiService.updateEvent(selectedEvent.id, eventData)
-      if (response.success) {
-        setIsEditMode(false)
-        await fetchEvents()
-        // Refresh current event data
-        const updatedEvent = await apiService.getEventById(selectedEvent.id)
-        if (updatedEvent.success) {
-          setSelectedEvent(updatedEvent.data as EventItem)
-        }
-      } else {
+
+      if (!response.success) {
         setError("Failed to update event")
+        return
+      }
+
+      // Update status separately if it changed
+      if (formData.status !== selectedEvent.status) {
+        const statusResponse = await apiService.updateEventStatus(selectedEvent.id, formData.status)
+        if (!statusResponse.success) {
+          setError("Event updated but failed to update status")
+        }
+      }
+
+      setIsEditMode(false)
+      await fetchEvents()
+      // Refresh current event data
+      const updatedEvent = await apiService.getEventById(selectedEvent.id)
+      if (updatedEvent.success) {
+        setSelectedEvent(updatedEvent.data as EventItem)
       }
     } catch (err: any) {
       setError(err.message || "Failed to update event")
