@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,13 +12,11 @@ export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState("")
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    setError("")
 
     try {
       const response = await apiService.login(email, password)
@@ -25,22 +24,22 @@ export default function LoginPage() {
       if (response.success && response.data.user) {
         const { token, user } = response.data
 
-        // Save auth data
         apiService.saveAuthData(token, user)
 
-        // Redirect based on role
+        toast.success("Login successful!")
+
         if (user.role === 'admin') {
           router.push("/admin/dashboard")
         } else if (user.role === 'petugas') {
           router.push("/petugas/dashboard")
         } else {
-          setError("Invalid user role. Please contact administrator.")
+          toast.error("Invalid user role. Please contact administrator.")
         }
       } else {
-        setError("Login failed. Please check your credentials.")
+        toast.error(response.error?.message || "Login failed. Please check your credentials.")
       }
     } catch (err: any) {
-      setError(err.message || "Login failed. Please try again.")
+      toast.error(err.message || "Login failed. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -49,7 +48,6 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-white flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Logo/Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-red-600 rounded-full mb-4">
             <svg
@@ -74,7 +72,6 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Login Card */}
         <Card className="border-0 shadow-2xl">
           <CardHeader className="space-y-1 bg-red-600 text-white rounded-t-lg">
             <CardTitle className="text-2xl text-center">Sign In</CardTitle>
@@ -116,12 +113,6 @@ export default function LoginPage() {
                 />
               </div>
 
-              {error && (
-                <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md border border-red-200">
-                  {error}
-                </div>
-              )}
-
               <Button
                 type="submit"
                 className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 disabled:opacity-50"
@@ -143,7 +134,6 @@ export default function LoginPage() {
           </CardContent>
         </Card>
 
-        {/* Footer */}
         <div className="text-center mt-6">
           <p className="text-sm text-gray-500">
             © 2025 Blood Donor Moora System. All rights reserved.

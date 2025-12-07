@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { toast } from "sonner"
 import { apiService } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -34,7 +35,9 @@ export default function EventsPage() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [isEditMode, setIsEditMode] = useState(false)
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false)
+  const [isRemoveOfficerModalOpen, setIsRemoveOfficerModalOpen] = useState(false)
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null)
+  const [selectedOfficerId, setSelectedOfficerId] = useState("")
   const [submitting, setSubmitting] = useState(false)
 
   // Officers management states
@@ -90,8 +93,8 @@ export default function EventsPage() {
         return 'bg-green-100 text-green-800'
       case 'completed':
         return 'bg-blue-100 text-blue-800'
-      case 'cancelled':
-        return 'bg-red-100 text-red-800'
+      case 'draft':
+        return 'bg-gray-100 text-gray-800'
       default:
         return 'bg-gray-100 text-gray-800'
     }
@@ -187,11 +190,12 @@ export default function EventsPage() {
       setAssignError("")
       const response = await apiService.assignOfficer(selectedEvent.id, selectedPetugasId)
       if (response.success) {
+        toast.success("Officer assigned successfully")
         setIsAssignModalOpen(false)
         setSelectedPetugasId("")
         setAssignError("")
         await fetchEventOfficers(selectedEvent.id)
-        await fetchEvents() // Refresh event list to update officer count
+        await fetchEvents()
       } else {
         setAssignError("Failed to assign officer")
       }
@@ -203,22 +207,29 @@ export default function EventsPage() {
   }
 
   const handleRemoveOfficer = async (officerId: string) => {
-    if (!selectedEvent) return
+    setSelectedOfficerId(officerId)
+    setIsRemoveOfficerModalOpen(true)
+  }
 
-    if (!confirm("Are you sure you want to remove this officer from the event?")) {
-      return
-    }
+  const handleConfirmRemoveOfficer = async () => {
+    if (!selectedEvent || !selectedOfficerId) return
 
     try {
-      const response = await apiService.removeOfficer(selectedEvent.id, officerId)
+      setSubmitting(true)
+      const response = await apiService.removeOfficer(selectedEvent.id, selectedOfficerId)
       if (response.success) {
+        toast.success("Officer removed successfully")
         await fetchEventOfficers(selectedEvent.id)
-        await fetchEvents() // Refresh event list to update officer count
+        await fetchEvents()
       } else {
-        setError("Failed to remove officer")
+        toast.error("Failed to remove officer")
       }
     } catch (err: any) {
-      setError(err.message || "Failed to remove officer")
+      toast.error(err.message || "Failed to remove officer")
+    } finally {
+      setSubmitting(false)
+      setIsRemoveOfficerModalOpen(false)
+      setSelectedOfficerId("")
     }
   }
 
@@ -230,7 +241,7 @@ export default function EventsPage() {
   const handleSubmitCreate = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.name || !formData.location || !formData.startDate || !formData.endDate) {
-      setError("Name, location, start date, and end date are required")
+      toast.error("Name, location, start date, and end date are required")
       return
     }
 
@@ -243,12 +254,12 @@ export default function EventsPage() {
       }
       const response = await apiService.createEvent(eventData)
       if (response.success) {
-        // Assign officers if any selected
         const eventId = (response.data as any).id
         for (const officerId of selectedOfficerIds) {
           await apiService.assignOfficer(eventId, officerId)
         }
 
+        toast.success("Event created successfully")
         setIsCreateModalOpen(false)
         fetchEvents()
         setFormData({
@@ -261,10 +272,10 @@ export default function EventsPage() {
         })
         setSelectedOfficerIds([])
       } else {
-        setError("Failed to create event")
+        toast.error("Failed to create event")
       }
     } catch (err: any) {
-      setError(err.message || "Failed to create event")
+      toast.error(err.message || "Failed to create event")
     } finally {
       setSubmitting(false)
     }
@@ -272,14 +283,13 @@ export default function EventsPage() {
 
   const handleSaveEvent = async () => {
     if (!selectedEvent || !formData.name || !formData.location || !formData.startDate || !formData.endDate) {
-      setError("Name, location, start date, and end date are required")
+      toast.error("Name, location, start date, and end date are required")
       return
     }
 
     try {
       setSubmitting(true)
 
-      // Update event details (without status)
       const { status, ...eventDataWithoutStatus } = formData
       const eventData = {
         ...eventDataWithoutStatus,
@@ -289,27 +299,26 @@ export default function EventsPage() {
       const response = await apiService.updateEvent(selectedEvent.id, eventData)
 
       if (!response.success) {
-        setError("Failed to update event")
+        toast.error("Failed to update event")
         return
       }
 
-      // Update status separately if it changed
       if (formData.status !== selectedEvent.status) {
         const statusResponse = await apiService.updateEventStatus(selectedEvent.id, formData.status)
         if (!statusResponse.success) {
-          setError("Event updated but failed to update status")
+          toast.warning("Event updated but failed to update status")
         }
       }
 
+      toast.success("Event updated successfully")
       setIsEditMode(false)
       await fetchEvents()
-      // Refresh current event data
       const updatedEvent = await apiService.getEventById(selectedEvent.id)
       if (updatedEvent.success) {
         setSelectedEvent(updatedEvent.data as EventItem)
       }
     } catch (err: any) {
-      setError(err.message || "Failed to update event")
+      toast.error(err.message || "Failed to update event")
     } finally {
       setSubmitting(false)
     }
@@ -322,14 +331,15 @@ export default function EventsPage() {
       setSubmitting(true)
       const response = await apiService.deleteEvent(selectedEvent.id)
       if (response.success) {
+        toast.success("Event deleted successfully")
         setIsDeleteModalOpen(false)
         fetchEvents()
         setSelectedEvent(null)
       } else {
-        setError("Failed to delete event")
+        toast.error("Failed to delete event")
       }
     } catch (err: any) {
-      setError(err.message || "Failed to delete event")
+      toast.error(err.message || "Failed to delete event")
     } finally {
       setSubmitting(false)
     }
@@ -569,9 +579,9 @@ export default function EventsPage() {
                         <SelectValue placeholder="Select status" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="draft">Draft</SelectItem>
                         <SelectItem value="active">Active</SelectItem>
                         <SelectItem value="completed">Completed</SelectItem>
-                        <SelectItem value="cancelled">Cancelled</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -776,9 +786,9 @@ export default function EventsPage() {
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="draft">Draft</SelectItem>
                     <SelectItem value="active">Active</SelectItem>
                     <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -869,6 +879,36 @@ export default function EventsPage() {
               className="bg-red-600 hover:bg-red-700"
             >
               {submitting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Remove Officer Confirmation Modal */}
+      <Dialog open={isRemoveOfficerModalOpen} onOpenChange={setIsRemoveOfficerModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remove Officer</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to remove this officer from the event?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsRemoveOfficerModalOpen(false)}
+              disabled={submitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleConfirmRemoveOfficer}
+              disabled={submitting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {submitting ? "Removing..." : "Remove"}
             </Button>
           </DialogFooter>
         </DialogContent>

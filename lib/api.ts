@@ -85,7 +85,7 @@ class ApiService {
     return response.json()
   }
 
-  async login(email: string, password: string): Promise<LoginResponse> {
+  async login(email: string, password: string): Promise<any> {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: {
@@ -94,12 +94,13 @@ class ApiService {
       body: JSON.stringify({ email, password }),
     })
 
+    const data = await response.json()
+    
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.message || 'Login failed')
+      return data
     }
 
-    return response.json()
+    return data
   }
 
   async getCurrentUser() {
